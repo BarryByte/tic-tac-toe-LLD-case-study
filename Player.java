@@ -1,6 +1,10 @@
-public class Player {
-    private String name;
-    private char symbol;
+/*
+ * Abstract Player class - base class for all player types
+ * Design Decision: Using composition pattern with strategy for move generation
+ */
+public abstract class Player {
+    protected String name;
+    protected char symbol;
     
     public Player(String name, char symbol) {
         this.name = name;
@@ -14,5 +18,8 @@ public class Player {
     public String getName() {
         return name;
     }
+    
+    public abstract Move getNextMove(Board board);
+    
+    public abstract boolean isHuman();
 }
-  

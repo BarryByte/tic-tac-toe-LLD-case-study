@@ -1,33 +1,62 @@
-import java.util.Scanner;
+import java.util.List;
 
 /**
- * Game class - orchestrates the entire game flow
- * Acts as the main controller coordinating Player and Board interactions
+ * Enhanced Game class - supports multiple players (human/bot mix)
+ * Design Decision: Uses polymorphism to handle different player types uniformly
  */
 public class Game {
-    private Player player1;
-    private Player player2;
+    private List<Player> players;
     private Board board;
-    private boolean isPlayer1Turn;
+    private int currentPlayerIndex;
     private boolean gameOver;
-    private Scanner scanner;
     
-    public Game(Player p1, Player p2, int rows, int cols) {
-        this.player1 = p1;
-        this.player2 = p2;
-        this.board = new Board(rows, cols);
-        this.isPlayer1Turn = true; // Player 1 starts
+    public Game(List<Player> players, int boardSize) {
+        if (players.size() < 2) {
+            throw new IllegalArgumentException("Need at least 2 players to play!");
+        }
+        
+        this.players = players;
+        this.board = new Board(boardSize);
+        this.currentPlayerIndex = 0;
         this.gameOver = false;
-        this.scanner = new Scanner(System.in);
+        
+        assignSymbols();
+    }
+    
+    /**
+     * Assigns unique symbols to each player
+     * Design Decision: Auto-assign symbols to avoid conflicts
+     */
+    private void assignSymbols() {
+        char[] symbols = {'X', 'O', '★', '♦', '♠', '♥', '♣', '◆', '◇', '●'};
+        
+        if (players.size() > symbols.length) {
+            throw new IllegalArgumentException("Too many players! Maximum " + symbols.length + " supported.");
+        }
+        
+        for (int i = 0; i < players.size(); i++) {
+            // Use reflection to set symbol (since it's protected in Player)
+            // In a real implementation, you might want a setter method instead
+            try {
+                java.lang.reflect.Field symbolField = Player.class.getDeclaredField("symbol");
+                symbolField.setAccessible(true);
+                symbolField.setChar(players.get(i), symbols[i]);
+            } catch (Exception e) {
+                System.err.println("Error assigning symbols: " + e.getMessage());
+            }
+        }
     }
     
     /**
      * Main game loop - continues until game ends
      */
     public void startGame() {
-        System.out.println("=== Welcome to Tic-Tac-Toe ===");
-        System.out.println(player1.getName() + " (" + player1.getSymbol() + ") vs " 
-                          + player2.getName() + " (" + player2.getSymbol() + ")");
+        System.out.println("=== Welcome to Enhanced Tic-Tac-Toe ===");
+        System.out.println("Players:");
+        for (Player player : players) {
+            String type = player.isHuman() ? "Human" : "Bot";
+            System.out.println("  " + player.getName() + " (" + player.getSymbol() + ") - " + type);
+        }
         
         board.printBoard();
         
@@ -39,47 +68,53 @@ public class Game {
                 displayResult();
                 gameOver = true;
             } else {
-                switchTurn();
+                switchToNextPlayer();
             }
         }
-        
-        scanner.close();
     }
     
+    /**
+     * Gets the current player
+     */
     private Player getCurrentPlayer() {
-        return isPlayer1Turn ? player1 : player2;
+        return players.get(currentPlayerIndex);
     }
     
-    private void switchTurn() {
-        isPlayer1Turn = !isPlayer1Turn;
+    /**
+     * Switches to the next player in rotation
+     */
+    private void switchToNextPlayer() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
     }
     
+    /**
+     * Processes one complete move for the current player
+     * Design Decision: Polymorphic approach - same code works for human and bot players
+     */
     private void processMove() {
         Player currentPlayer = getCurrentPlayer();
         boolean validMove = false;
         
-        // Keep asking for input until valid move is made
         while (!validMove) {
-            System.out.println(currentPlayer.getName() + "'s turn (" + currentPlayer.getSymbol() + ")");
-            System.out.print("Enter row and column (space separated): ");
+            Move move = currentPlayer.getNextMove(board);
             
-            try {
-                int row = scanner.nextInt();
-                int col = scanner.nextInt();
-                
-                if (board.isValidMove(row, col)) {
-                    board.makeMove(row, col, currentPlayer.getSymbol());
-                    validMove = true;
-                } else {
+            if (move != null && board.isValidMove(move.getRow(), move.getCol())) {
+                board.makeMove(move.getRow(), move.getCol(), currentPlayer.getSymbol());
+                validMove = true;
+            } else {
+                if (currentPlayer.isHuman()) {
                     System.out.println("Invalid move! Cell is either occupied or out of bounds. Try again.");
+                } else {
+                    // Bot made invalid move - should not happen with good strategies
+                    System.out.println("Bot error: Invalid move attempted. Retrying...");
                 }
-            } catch (Exception e) {
-                System.out.println("Invalid input! Please enter two numbers separated by space.");
-                scanner.nextLine(); // Clear the invalid input buffer
             }
         }
     }
     
+    /**
+     * Checks if game has ended (win or draw)
+     */
     private boolean checkGameEnd() {
         Player currentPlayer = getCurrentPlayer();
         
@@ -96,13 +131,27 @@ public class Game {
         return false;
     }
     
+    /**
+     * Displays the final game result
+     */
     private void displayResult() {
         Player currentPlayer = getCurrentPlayer();
         
         if (board.checkWin(currentPlayer.getSymbol())) {
-            System.out.println("Congratulations " + currentPlayer.getName() + "! You won!");
+            System.out.println("🎉 " + currentPlayer.getName() + " wins! 🎉");
         } else {
-            System.out.println("It's a draw! Good game both players! ././././././");
+            System.out.println("It's a draw! Good game everyone! 🤝");
+        }
+        
+        // Show final statistics
+        System.out.println("\nFinal Player Summary:");
+        for (Player player : players) {
+            String type = player.isHuman() ? "Human" : "Bot";
+            if (!player.isHuman()) {
+                BotPlayer bot = (BotPlayer) player;
+                type += " (" + bot.getDifficulty() + ")";
+            }
+            System.out.println("  " + player.getName() + " (" + player.getSymbol() + ") - " + type);
         }
     }
 }

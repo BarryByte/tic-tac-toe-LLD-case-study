@@ -1,46 +1,77 @@
 /**
- * Board class - handles all board-related operations
- * Encapsulates board state and game rules
+ * Enhanced Board class - handles NxN board operations only
+ * Design Decision: Simplified to only support square boards for consistent game rules
  */
 public class Board {
     private char[][] board;
-    private int rows;
-    private int cols;
+    private int size; // NxN board, so only need one dimension
     
-    public Board(int rows, int cols) {
-        this.rows = rows;
-        this.cols = cols;
-        this.board = new char[rows][cols];
+    public Board(int size) {
+        this.size = size;
+        this.board = new char[size][size];
         
         // Initialize board with '.' for empty cells
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 board[i][j] = '.';
             }
         }
     }
-     
-
     
+    /**
+     * Copy constructor for creating temporary boards (used by bot strategies)
+     */
+    private Board(Board other) {
+        this.size = other.size;
+        this.board = new char[size][size];
+        
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                this.board[i][j] = other.board[i][j];
+            }
+        }
+    }
+    
+    /**
+     * Creates a deep copy of this board
+     */
+    public Board copy() {
+        return new Board(this);
+    }
+    
+    public int getSize() {
+        return size;
+    }
+    
+    /**
+     * Validates if a move is legal
+     */
     public boolean isValidMove(int row, int col) {
         // Check bounds
-        if (row < 0 || row >= rows || col < 0 || col >= cols) {
+        if (row < 0 || row >= size || col < 0 || col >= size) {
             return false;
         }
         
         // Check if cell is empty
         return board[row][col] == '.';
     }
-
+    
+    /**
+     * Places a symbol on the board
+     */
     public void makeMove(int row, int col, char symbol) {
         board[row][col] = symbol;
     }
     
+    /**
+     * Enhanced win checking for NxN boards
+     * Design Decision: Need N in a row/column/diagonal to win
+     */
     public boolean checkWin(char symbol) {
-        // Check rows
-        for (int i = 0; i < rows; i++) {
+        // Check all rows
+        for (int i = 0; i < size; i++) {
             boolean rowWin = true;
-            for (int j = 0; j < cols; j++) {
+            for (int j = 0; j < size; j++) {
                 if (board[i][j] != symbol) {
                     rowWin = false;
                     break;
@@ -49,10 +80,10 @@ public class Board {
             if (rowWin) return true;
         }
         
-        // Check columns
-        for (int j = 0; j < cols; j++) {
+        // Check all columns
+        for (int j = 0; j < size; j++) {
             boolean colWin = true;
-            for (int i = 0; i < rows; i++) {
+            for (int i = 0; i < size; i++) {
                 if (board[i][j] != symbol) {
                     colWin = false;
                     break;
@@ -61,36 +92,35 @@ public class Board {
             if (colWin) return true;
         }
         
-        // PROBLEM: Only works for square boards!
-        // For rectangular boards, diagonal win might not make sense
-        if (rows == cols) {
-            // Check diagonal (top-left to bottom-right)
-            boolean diagWin = true;
-            for (int i = 0; i < rows; i++) {
-                if (board[i][i] != symbol) {
-                    diagWin = false;
-                    break;
-                }
+        // Check main diagonal (top-left to bottom-right)
+        boolean mainDiagWin = true;
+        for (int i = 0; i < size; i++) {
+            if (board[i][i] != symbol) {
+                mainDiagWin = false;
+                break;
             }
-            if (diagWin) return true;
-            
-            // Check anti-diagonal (top-right to bottom-left)
-            boolean antiDiagWin = true;
-            for (int i = 0; i < rows; i++) {
-                if (board[i][cols - 1 - i] != symbol) {
-                    antiDiagWin = false;
-                    break;
-                }
-            }
-            if (antiDiagWin) return true;
         }
+        if (mainDiagWin) return true;
+        
+        // Check anti-diagonal (top-right to bottom-left)
+        boolean antiDiagWin = true;
+        for (int i = 0; i < size; i++) {
+            if (board[i][size - 1 - i] != symbol) {
+                antiDiagWin = false;
+                break;
+            }
+        }
+        if (antiDiagWin) return true;
         
         return false;
     }
     
+    /**
+     * Checks if the board is completely filled
+     */
     public boolean isFull() {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 if (board[i][j] == '.') {
                     return false;
                 }
@@ -99,21 +129,24 @@ public class Board {
         return true;
     }
     
+    /**
+     * Displays the current board state with coordinates
+     */
     public void printBoard() {
         System.out.println("\nCurrent Board:");
         
         // Print column numbers
         System.out.print("   ");
-        for (int j = 0; j < cols; j++) {
-            System.out.print(j + " ");
+        for (int j = 0; j < size; j++) {
+            System.out.printf("%2d ", j);
         }
         System.out.println();
         
         // Print rows with row numbers
-        for (int i = 0; i < rows; i++) {
-            System.out.print(i + "  ");
-            for (int j = 0; j < cols; j++) {
-                System.out.print(board[i][j] + " ");
+        for (int i = 0; i < size; i++) {
+            System.out.printf("%2d ", i);
+            for (int j = 0; j < size; j++) {
+                System.out.printf(" %c ", board[i][j]);
             }
             System.out.println();
         }

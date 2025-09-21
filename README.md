@@ -116,3 +116,53 @@ Game USES Player methods to get symbols and names
 - **Easy Symbol Changes:** Player symbols configurable
 - **Modular Win Detection:** Can be enhanced for different win conditions
 - **Clean Interface:** Adding features (like AI players) would be straightforward
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----
+----
+# v2
+----
+----
+
+## Key Design Changes & Thought Process:
+
+### 1. **Player Architecture - Polymorphism + Strategy Pattern**
+- **Abstract Player class** - Common interface for all player types
+- **HumanPlayer & BotPlayer** - Concrete implementations
+- **BotStrategy interface** - Composition pattern for bot intelligence
+- **Why this works:** `Game.processMove()` treats all players the same way - just calls `player.getNextMove(board)`
+
+### 2. **Multi-Player Support (2+ players)**
+- **List<Player> instead of player1/player2** - Scalable design
+- **Circular turn management** - `currentPlayerIndex = (currentPlayerIndex + 1) % players.size()`
+- **Auto symbol assignment** - Uses array of symbols (X, O, ★, ♦, etc.)
+
+### 3. **Bot Intelligence Levels**
+- **Easy:** Random moves
+- **Medium:** Try to win → Block opponent → Take center → Random
+- **Hard:** Minimax algorithm with alpha-beta pruning for optimal play
+
+### 4. **Board Enhancements**
+- **NxN only** - Solved rectangular board complexity
+- **Copy constructor** - Needed for bot strategies to simulate moves
+- **Consistent win rules** - Always need N-in-a-row/column/diagonal
+
+### 5. **Move Class**
+- **Simple data holder** - Encapsulates row/col information
+- **Clean interface** - Both human input and bot decisions return Move objects
+
+
+
