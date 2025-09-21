@@ -19,6 +19,8 @@ public class Board {
             }
         }
     }
+     
+
     
     public boolean isValidMove(int row, int col) {
         // Check bounds

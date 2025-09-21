@@ -17,3 +17,7 @@ hs_err_pid*
 target/
 build/
 out/
+Board.class
+Game.class
+Player.class
+

@@ -29,5 +29,6 @@ public class TicTacToe {
         game.startGame();
         
         scanner.close();
+         
     }
 }

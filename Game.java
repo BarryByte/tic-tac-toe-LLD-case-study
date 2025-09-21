@@ -96,9 +96,6 @@ public class Game {
         return false;
     }
     
-    /**
-     * Displays the final game result
-     */
     private void displayResult() {
         Player currentPlayer = getCurrentPlayer();
         
