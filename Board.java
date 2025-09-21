@@ -1,77 +1,120 @@
+/**
+ * Board class - handles all board-related operations
+ * Encapsulates board state and game rules
+ */
 public class Board {
-    int size;
-    char[][] grid;
-
-    public Board(int size) {
-        this.size = size;
-        grid = new char[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                grid[i][j] = '_';  
+    private char[][] board;
+    private int rows;
+    private int cols;
+    
+    public Board(int rows, int cols) {
+        this.rows = rows;
+        this.cols = cols;
+        this.board = new char[rows][cols];
+        
+        // Initialize board with '.' for empty cells
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                board[i][j] = '.';
             }
         }
     }
-
-    public boolean placeSymbol(int row, int col, char symbol) {
-        if (row >= 0 && row < size && col >= 0 && col < size && grid[row][col] == '_') {
-            grid[row][col] = symbol;
-            return true;
+    
+    public boolean isValidMove(int row, int col) {
+        // Check bounds
+        if (row < 0 || row >= rows || col < 0 || col >= cols) {
+            return false;
         }
+        
+        // Check if cell is empty
+        return board[row][col] == '.';
+    }
+
+    public void makeMove(int row, int col, char symbol) {
+        board[row][col] = symbol;
+    }
+    
+    public boolean checkWin(char symbol) {
+        // Check rows
+        for (int i = 0; i < rows; i++) {
+            boolean rowWin = true;
+            for (int j = 0; j < cols; j++) {
+                if (board[i][j] != symbol) {
+                    rowWin = false;
+                    break;
+                }
+            }
+            if (rowWin) return true;
+        }
+        
+        // Check columns
+        for (int j = 0; j < cols; j++) {
+            boolean colWin = true;
+            for (int i = 0; i < rows; i++) {
+                if (board[i][j] != symbol) {
+                    colWin = false;
+                    break;
+                }
+            }
+            if (colWin) return true;
+        }
+        
+        // PROBLEM: Only works for square boards!
+        // For rectangular boards, diagonal win might not make sense
+        if (rows == cols) {
+            // Check diagonal (top-left to bottom-right)
+            boolean diagWin = true;
+            for (int i = 0; i < rows; i++) {
+                if (board[i][i] != symbol) {
+                    diagWin = false;
+                    break;
+                }
+            }
+            if (diagWin) return true;
+            
+            // Check anti-diagonal (top-right to bottom-left)
+            boolean antiDiagWin = true;
+            for (int i = 0; i < rows; i++) {
+                if (board[i][cols - 1 - i] != symbol) {
+                    antiDiagWin = false;
+                    break;
+                }
+            }
+            if (antiDiagWin) return true;
+        }
+        
         return false;
     }
-
-    public int checkWin() {
-        for (int i = 0; i < size; i++) {
-            if (checkRow(i) || checkColumn(i)) {
-                return 1;
+    
+    public boolean isFull() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (board[i][j] == '.') {
+                    return false;
+                }
             }
         }
-        if (checkDiagonal()) {
-            return 1;
-        }
-        return 0;
-    }
-
-    private boolean checkRow(int row) {
-        char first = grid[row][0];
-        if (first == '_') return false;
-        for (int j = 1; j < size; j++) {
-            if (grid[row][j] != first) return false;
-        }
         return true;
     }
-
-    private boolean checkColumn(int col) {
-        char first = grid[0][col];
-        if (first == '_') return false;
-        for (int i = 1; i < size; i++) {
-            if (grid[i][col] != first) return false;
+    
+    public void printBoard() {
+        System.out.println("\nCurrent Board:");
+        
+        // Print column numbers
+        System.out.print("   ");
+        for (int j = 0; j < cols; j++) {
+            System.out.print(j + " ");
         }
-        return true;
-    }
-
-    private boolean checkDiagonal() {
-        char first = grid[0][0];
-        if (first == '_') return false;
-        for (int i = 1; i < size; i++) {
-            if (grid[i][i] != first) return false;
-        }
-
-        first = grid[0][size - 1];
-        if (first == '_') return false;
-        for (int i = 1; i < size; i++) {
-            if (grid[i][size - 1 - i] != first) return false;
-        }
-
-        return true;
-    }
-
-    public void display() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                System.out.print(grid[i][j] + " ");
+        System.out.println();
+        
+        // Print rows with row numbers
+        for (int i = 0; i < rows; i++) {
+            System.out.print(i + "  ");
+            for (int j = 0; j < cols; j++) {
+                System.out.print(board[i][j] + " ");
             }
             System.out.println();
         }
+        System.out.println();
     }
 }
